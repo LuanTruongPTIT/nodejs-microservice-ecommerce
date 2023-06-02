@@ -1,0 +1,27 @@
+{
+  "name": "nodejs_docker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "NODE_ENV=prod nodemon src/index.js",
+    "dev": "NODE_ENV=dev nodemon src/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "amqplib": "^0.10.3",
+    "bcrypt": "^5.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "mongoose": "^7.0.4",
+    "nodemon": "^2.0.22",
+    "redis": "^4.6.6"
+  },
+  "devDependencies": {
+    "http-errors": "^2.0.0",
+    "jsonwebtoken": "^9.0.0",
+    "lodash": "^4.17.21"
+  }
+}
