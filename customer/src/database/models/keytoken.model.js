@@ -8,27 +8,11 @@ const COLLECTION_NAME = "Keys";
 // });
 const keyTokenchema = new Schema(
   {
-    user: {
-      type: Schema.Types.ObjectId,
-      required: true,
-      ref: "Shop",
-    },
-    publicKey: {
-      type: String,
-      require: true,
-    },
-    privateKey: {
-      type: String,
-      require: true,
-    },
-    refreshTokensUsed: {
-      type: Array,
-      default: [],
-    },
-    refreshToken: {
-      type: String,
-      require: true,
-    },
+    user: { type: Schema.Types.ObjectId, required: true, ref: "Shop" },
+    publicKey: { type: String, require: true },
+    privateKey: { type: String, require: true },
+    refreshTokensUsed: { type: Array, default: [] },
+    refreshToken: { type: String, require: true },
   },
   {
     collection: COLLECTION_NAME,

@@ -1,7 +1,7 @@
 const AccessService = require("../services/access.service");
-const { apiKey } = require("../authUtils/checkAuth");
+// const { apiKey } = require("../authUtils/checkAuth");
 const { OK, CREATED, SuccessResponse } = require("../core/success.response");
-const { authentication, authenticationV2 } = require("../authUtils/authUtils");
+const { authenticationV2 } = require("../authUtils/authUtils");
 const { findByUserId } = require("../services/keyToken.service");
 const { BadRequestError } = require("../core/error.response");
 const { SubscribeMessage } = require("../utils");

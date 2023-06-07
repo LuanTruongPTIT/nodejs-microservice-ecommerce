@@ -5,33 +5,12 @@ const DOCUMENT_NAME = "Shop";
 const COLLECTION_NAME = "shops";
 const shopSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      trim: true,
-      maxLength: 150,
-    },
-    email: {
-      type: String,
-      unique: true,
-      trim: true,
-    },
-    password: {
-      type: String,
-      required: true,
-    },
-    status: {
-      type: String,
-      enum: ["active", "inactive"],
-      default: "active",
-    },
-    verfify: {
-      type: mongoose.Schema.Types.Boolean,
-      default: false,
-    },
-    role: {
-      type: Array,
-      default: [],
-    },
+    name: { type: String, trim: true, maxLength: 150 },
+    email: { type: String, unique: true, trim: true },
+    password: { type: String, required: true },
+    status: { type: String, enum: ["active", "inactive"], default: "active" },
+    verfify: { type: mongoose.Schema.Types.Boolean, default: false },
+    role: { type: Array, default: [] },
   },
   {
     collection: COLLECTION_NAME,

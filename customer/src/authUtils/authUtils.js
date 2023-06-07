@@ -17,7 +17,7 @@ module.exports.CreateTokenPair = async (payload, publicKey, privateKey) => {
     const refreshToken = jwt.sign(payload, privateKey, {
       expiresIn: "7 days",
     });
-    console.log(refreshToken);
+    // console.log(refreshToken);
     jwt.verify(accessToken, publicKey, (err, decode) => {
       if (err) {
         console.error("error verify:", err);
@@ -25,7 +25,6 @@ module.exports.CreateTokenPair = async (payload, publicKey, privateKey) => {
         console.log("decode verify:", decode);
       }
     });
-
     return { accessToken, refreshToken };
   } catch (error) {
     console.log(error);
