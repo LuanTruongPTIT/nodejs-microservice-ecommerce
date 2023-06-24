@@ -6,6 +6,7 @@ const { BadRequestError } = require("../core/error.response");
 class findUserById {
   async handleEvent(data, channel) {
     const userId = data;
+    console.log(userId);
     const customer = await CustomerRepository.FindCustomerById({ _id: userId });
     const datas = {
       event: "Get_User",

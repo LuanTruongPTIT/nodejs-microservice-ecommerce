@@ -40,19 +40,6 @@ module.exports.PublishMessage = (channel, service, msg) => {
 module.exports.SubscribeMessage = async (channel) => {
   await channel.assertExchange(EXCHANGE_NAME, "direct", { durable: true });
   const q = await channel.assertQueue(QUEUE_NAME, { exclusive: true });
-  channel.bindQueue(q.queue, EXCHANGE_NAME, PRODUCT_SERVICE);
-
-  // channel.consume(
-  //   q.queue,
-  //   (msg) => {
-  //     if (msg.content) {
-  //       console.log("the message is:", msg.content.toString());
-  //       service.SubscribeEvents(msg.content.toString());
-  //     }
-  //   },
-  //   {
-  //     noAck: true,
-  //   }
-  // );
+  await channel.bindQueue(q.queue, EXCHANGE_NAME, PRODUCT_SERVICE);
   return q;
 };

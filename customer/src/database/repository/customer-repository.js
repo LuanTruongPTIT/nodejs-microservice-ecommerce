@@ -15,8 +15,8 @@ class CustomerRepository {
     const savedCustomer = await newCustomer.save();
     return savedCustomer;
   }
-  static async FindCustomerById({ userId }) {
-    const customer = await shopModel.findOne({ userId });
+  static async FindCustomerById(userId) {
+    const customer = await shopModel.findOne(userId);
     return customer;
   }
 }

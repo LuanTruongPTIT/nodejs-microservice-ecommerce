@@ -1,7 +1,7 @@
 const express = require("express");
 const expressApp = require("./express-app");
 
-const { connectRedis } = require("./database/connection.redis");
+const redis_customer = require("./database/connection.redis");
 
 const { PORT } = require("./config");
 const instanceMongoDB = require("./database/connection");
@@ -12,8 +12,7 @@ const StartServer = async () => {
   await instanceMongoDB();
   countConnect();
   checkOverload();
-
-  await connectRedis();
+  redis_customer.initalizeClient();
   await expressApp(app);
   // app.use((req, res, next) => {
   //   const error = new Error("Not Found");

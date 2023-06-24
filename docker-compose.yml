@@ -8,8 +8,9 @@ services:
     volumes:
       - ./db/:/data/db 
   redis:
-    container_name: redis
-    image: redis
+    container_name: redis_1
+    # image: redis
+    image: redislabs/rejson:latest
     ports:
      - "6379:6379"
     # networks:

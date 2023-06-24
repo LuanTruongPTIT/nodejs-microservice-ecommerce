@@ -32,7 +32,11 @@ class ProductFactory {
     channel
   ) {
     const query = { product_shop, isDraft: true };
-    return await findAllDraftsForShop({ query, limit, skip }, channel);
+    return await findAllDraftsForShop(
+      { query, limit, skip },
+      channel,
+      product_shop
+    );
   }
   async SubscribeEvents(payload, channel) {
     const { event, data } = payload;

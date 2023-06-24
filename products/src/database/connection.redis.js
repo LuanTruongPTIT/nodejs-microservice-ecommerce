@@ -1,23 +1,46 @@
 const redis = require("redis");
 const { REDIS_HOST, REDIS_PORT } = require("../config");
 
-let redisClient;
-module.exports.connectRedis = async () => {
-  if (!redisClient) {
-    redisClient = redis.createClient({
+class RedisWrapper {
+  constructor() {
+    // this.client = new redis(REDIS_PORT, REDIS_HOST);
+    this.client = redis.createClient({
       url: `redis://${REDIS_HOST}:${REDIS_PORT}`,
     });
   }
-  (async () => {
-    await redisClient.connect();
-  })();
+  initalizeClient() {
+    this.onConnect();
+    this.onReconnecting();
+    this.onEnd();
+    this.onClose();
+    this.onError();
+  }
+  async onConnect() {
+    await this.client.connect("connect", () => {
+      console.log("Redis-Connect to Redis");
+    });
+  }
+  onReconnecting() {
+    this.client.on("reconnecting", () => {
+      console.log("Redis-Reconnecting to Redis");
+    });
+  }
+  onEnd() {
+    this.client.on("end", () => {
+      console.log("Redis-End to Redis");
+    });
+  }
+  onClose() {
+    this.client.on("close", () => {
+      console.log("Redis-End to Redis");
+    });
+  }
+  onError() {
+    this.client.on("error", () => {
+      console.log("Redis-Redis error");
+    });
+  }
+}
+const redis_products = new RedisWrapper();
 
-  redisClient.on("ready", () => {
-    console.log("Connected!");
-  });
-
-  redisClient.on("error", (err) => {
-    console.log("Error in the Connection", err);
-  });
-  return redisClient;
-};
+module.exports = redis_products;

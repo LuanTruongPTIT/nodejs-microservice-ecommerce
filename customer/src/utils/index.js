@@ -31,8 +31,8 @@ module.exports.createChannel = async () => {
     console.log(error);
   }
 };
-module.exports.PublishMessage = (channel, service, msg) => {
-  channel.publish(EXCHANGE_NAME, service, Buffer.from(msg));
+module.exports.PublishMessage = async (channel, service, msg) => {
+  await channel.publish(EXCHANGE_NAME, service, Buffer.from(msg));
 };
 module.exports.SubscribeMessage = async (channel, service) => {
   // await channel.assertExchange(EXCHANGE_NAME, "direct", { durable: true });
