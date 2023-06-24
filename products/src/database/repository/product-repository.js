@@ -8,11 +8,10 @@ const {
 const { SubscribeMessage } = require("../../utils/index");
 const JSONCache = require("redis-json");
 const redis_product = require("../connection.redis");
-// let jsonCache = new JSONCache(redis_product.client, { predix: "product:" });
 
 const getDraft = async ({ query, limit, skip }, product_shop) => {
   const key = `draft:true:${product_shop}`;
-  // const responseProduct = await jsonCache.get(key, "draft:true");
+
   const responseProduct = await redis_product.client.json.get(key, {
     path: ".draft:true",
   });
@@ -44,8 +43,6 @@ module.exports.findAllDraftsForShop = async (
 ) => {
   let products = await getDraft({ query, limit, skip }, product_shop);
 
-  // const customer = await consumerCustomer(channel);
-  // console.log(customer);
   const q = await SubscribeMessage(channel);
   let customer;
   await channel.consume(
