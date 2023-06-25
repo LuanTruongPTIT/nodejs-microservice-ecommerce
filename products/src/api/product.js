@@ -5,7 +5,7 @@ const { PublishMessage, SubscribeMessage } = require("../utils/index");
 const { CUSTOMER_SERVICE } = require("../config");
 module.exports = (app, channel) => {
   // const service = new ProductService();
-  // SubscribeMessage(channel, service);
+  SubscribeMessage(channel);
   app.post(
     "/product/createproduct/",
     authenticationV2,
@@ -26,7 +26,7 @@ module.exports = (app, channel) => {
       event: "FIND_USER",
       product_shop: req.user.userId,
     };
-    PublishMessage(channel, CUSTOMER_SERVICE, JSON.stringify(data));
+    await PublishMessage(channel, CUSTOMER_SERVICE, JSON.stringify(data));
     new SuccessResponse({
       message: "Get all drafts success",
       metadata: await ProductService.findAllDraftsForShop(
