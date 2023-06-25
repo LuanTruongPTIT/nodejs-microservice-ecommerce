@@ -6,9 +6,9 @@ const {
   funiture,
 } = require("../models/product.model");
 const { SubscribeMessage } = require("../../utils/index");
-const JSONCache = require("redis-json");
 const redis_product = require("../connection.redis");
-
+const event = require("../../constants/event");
+const { BadRequestError } = require("../../core/error.response");
 const getDraft = async ({ query, limit, skip }, product_shop) => {
   const key = `draft:true:${product_shop}`;
 
@@ -34,7 +34,29 @@ const getDraft = async ({ query, limit, skip }, product_shop) => {
     return products;
   }
 };
-const consumerCustomer = async (channel) => {};
+const consumerCustomer = async (channel) => {
+  const q = await SubscribeMessage(channel);
+  let message;
+  return new Promise((resolve, reject) => {
+    channel.consume(
+      q.queue,
+      (msg) => {
+        if (msg.content.toString().event === event.getUserID) {
+          message = JSON.parse(msg.content).customer;
+          resolve({
+            name: message.name,
+            email: message.email,
+          });
+        }
+      },
+      {
+        noAck: true,
+      }
+    );
+  }).catch((error) => {
+    throw new BadRequestError("Not information user");
+  });
+};
 // function all draft of shop
 module.exports.findAllDraftsForShop = async (
   { query, limit, skip },
@@ -42,27 +64,14 @@ module.exports.findAllDraftsForShop = async (
   product_shop
 ) => {
   let products = await getDraft({ query, limit, skip }, product_shop);
-
-  const q = await SubscribeMessage(channel);
-  let customer;
-  await channel.consume(
-    q.queue,
-    (msg) => {
-      if (msg.content) {
-        customer = JSON.parse(msg.content);
-        console.log(customer);
-        // productDraftSHops.map((productDraftSHop) => {
-        //   productDraftSHop.product_shop = {
-        //     name: message.customer.name,
-        //     email: message.customer.email,
-        //   };
-        //   return productDraftSHop;
-        // })
-      }
-      return customer;
-    },
-    {
-      noAck: true,
-    }
-  );
+  const customer = await consumerCustomer(channel);
+  const { name, email } = customer;
+  products.map((product) => {
+    product.product_shop = {
+      name,
+      email,
+    };
+    return product;
+  });
+  return products;
 };
