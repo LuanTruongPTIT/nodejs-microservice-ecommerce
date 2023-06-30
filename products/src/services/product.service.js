@@ -5,12 +5,14 @@ const {
   clothing,
   electronic,
   funiture,
-} = require("../database/models/product.model");
+} = require("../models/product.model");
 
 const { BadRequestError, ForbiddenError } = require("../core/error.response");
 const {
   findAllDraftsForShop,
-} = require("../database/repository/product-repository");
+  publishProductByShop,
+  findAllPublishForShop,
+} = require("../repository/product-repository");
 // define Factory class to create product
 
 class ProductFactory {
@@ -33,6 +35,20 @@ class ProductFactory {
   ) {
     const query = { product_shop, isDraft: true };
     return await findAllDraftsForShop(
+      { query, limit, skip },
+      channel,
+      product_shop
+    );
+  }
+  static async publishProductByShop(product_id, product_shop) {
+    return await publishProductByShop(product_id, product_shop);
+  }
+  static async findAllPublishForShop(
+    { product_shop, limit = 50, skip = 0 },
+    channel
+  ) {
+    const query = { product_shop, isPublished: true };
+    return await findAllPublishForShop(
       { query, limit, skip },
       channel,
       product_shop

@@ -1,8 +1,8 @@
 "use strict";
 
-const shopModel = require("../database/models/shop.model");
-const CustomerRepository = require("../database/repository/customer-repository");
-const keytokenModel = require("../database/models/keytoken.model");
+const shopModel = require("../models/shop.model");
+const CustomerRepository = require("../repository/customer-repository");
+const keytokenModel = require("../models/keytoken.model");
 const {
   ConflictRequestError,
   BadRequestError,
@@ -25,62 +25,57 @@ class AccessService {
     this.repository = new CustomerRepository();
   }
   signUp = async ({ name, email, password }, res) => {
-    try {
-      //step1:check mail exist
-      const hodelShop = await this.repository.FindCustomer({ email });
-      if (hodelShop) {
-        ConflictRequestError("Error:Shop already exit ");
-      }
-      const password_user = await GeneratePassword(password, 10);
-      const newShop = await this.repository.createCustomer({
-        name,
-        email,
-        password: password_user,
-        role: RoleShop.SHOP,
-      });
-      if (newShop) {
-        const privateKey = crypto.randomBytes(64).toString("hex");
-        const publicKey = crypto.randomBytes(64).toString("hex");
-        const tokens = await CreateTokenPair(
-          { userId: newShop.id, email },
-          publicKey,
-          privateKey
-        );
-        const keyStore = await KeyTokenService.createKeyToken({
-          userId: newShop.id,
-          publicKey,
-          privateKey,
-          refreshToken: tokens.refreshToken,
-        });
-
-        if (!keyStore) {
-          conflict(res, "publicKeyString error");
-        }
-
-        const apiKey = await GenerateApiKey();
-
-        if (apiKey) {
-          // res.setHeader("x-api-key", apiKey);
-        }
-        return {
-          code: 201,
-          metadata: {
-            shopp: getInfoData({
-              fileds: ["_id", "name", "email"],
-              object: newShop,
-            }),
-            tokens,
-          },
-        };
-      }
-      return {
-        code: 200,
-        metadata: null,
-      };
-    } catch (error) {
-      // return badRequest(error, res);
-      console.log(error);
+    //step1:check mail exist
+    const holderShop = await this.repository.FindCustomer({ email });
+    if (holderShop) {
+      throw new BadRequestError("Error:Shop already exit");
     }
+    const password_user = await GeneratePassword(password, 10);
+    const newShop = await this.repository.createCustomer({
+      name,
+      email,
+      password: password_user,
+      role: RoleShop.SHOP,
+    });
+    if (newShop) {
+      const privateKey = crypto.randomBytes(64).toString("hex");
+      const publicKey = crypto.randomBytes(64).toString("hex");
+      const tokens = await CreateTokenPair(
+        { userId: newShop.id, email },
+        publicKey,
+        privateKey
+      );
+      const keyStore = await KeyTokenService.createKeyToken({
+        userId: newShop.id,
+        publicKey,
+        privateKey,
+        refreshToken: tokens.refreshToken,
+      });
+
+      if (!keyStore) {
+        conflict(res, "publicKeyString error");
+      }
+
+      // const apiKey = await GenerateApiKey();
+
+      // if (apiKey) {
+      //   res.setHeader("x-api-key", apiKey);
+      // }
+      return {
+        code: 201,
+        metadata: {
+          shopp: getInfoData({
+            fileds: ["_id", "name", "email"],
+            object: newShop,
+          }),
+          tokens,
+        },
+      };
+    }
+    return {
+      code: 200,
+      metadata: null,
+    };
   };
 
   //login

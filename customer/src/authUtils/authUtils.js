@@ -12,7 +12,7 @@ const HEADER = {
 module.exports.CreateTokenPair = async (payload, publicKey, privateKey) => {
   try {
     const accessToken = jwt.sign(payload, publicKey, {
-      expiresIn: "2 days",
+      // expiresIn: "2 days",
     });
     const refreshToken = jwt.sign(payload, privateKey, {
       expiresIn: "7 days",

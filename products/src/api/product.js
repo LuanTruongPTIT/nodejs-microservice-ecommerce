@@ -37,4 +37,31 @@ module.exports = (app, channel) => {
       ),
     }).send(res);
   });
+
+  //Publish product
+  app.post("/product/publish", authenticationV2, async (req, res, next) => {
+    new SuccessResponse({
+      message: "Publish product success",
+      metadata: await ProductService.publishProductByShop(req.body.product_id, {
+        product_shop: req.user.userId,
+      }),
+    }).send(res);
+  });
+  app.get("/product/publish/all", authenticationV2, async (req, res, next) => {
+    const data = {
+      event: "FIND_USER",
+      product_shop: req.user.userId,
+    };
+    await PublishMessage(channel, CUSTOMER_SERVICE, JSON.stringify(data));
+    new SuccessResponse({
+      message: "Get all product publish ",
+      metada: await ProductService.findAllPublishForShop(
+        {
+          product_shop: req.user.userId,
+        },
+        channel
+      ),
+    }).send(res);
+  });
+  // app.get("/publish/");
 };

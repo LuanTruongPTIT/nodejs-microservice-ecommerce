@@ -1,50 +1,12 @@
 version: "3.8"
 services:
-  mongo1:
-    container_name: mongo1
+  mongo:
+    container_name: mongo
     image: mongo
     ports:
-      - 27023:27017 
-    restart: always
-    command: mongod --replSet "rs0"
+      - "27018:27017"
     volumes:
-      - ./mongodb/mongo1/:/app/data/db
-    environment:
-      - MONGO_INITDB_REPLICASET=rs0
-    networks:
-      - mongo-replica
-  mongo2:
-    container_name: mongo2
-    image: mongo
-    
-    ports:
-      - 27020:27017
-    restart: always
-    command: mongod --replSet "rs0"
-    volumes:
-      - ./mongodb/mongo2/:/app/data/db
-    environment:
-      - MONGO_INITDB_REPLICASET=rs0
-    networks:
-      - mongo-replica
-  mongo3:
-    container_name: mongo3
-    image: mongo
-   
-    ports:
-      - 27021:27017
-    restart: always
-    command: mongod --replSet "rs0"
-    volumes:
-      - ./mongodb/mongo3/:/app/data/db
-    environment:
-      - MONGO_INITDB_REPLICASET=rs0
-    networks:
-      - mongo-replica
-# finally, we can define the initialization server
-# this runs the `rs.initiate` command to intialize
-# the replica set and connect the three servers to each other
-       
+      - ./db/:/data/db 
   redis:
     container_name: redis_1
     # image: redis
@@ -77,7 +39,7 @@ services:
       - "8002:8002"
     restart: always
     depends_on:         
-      - "mongo1"
+      - "mongo"
       - "rabbitmq"
     volumes:
       - .:/app 
@@ -96,8 +58,8 @@ services:
     ports:
       - "8003:8003"
     restart: always
-    # depends_on:
-    #   - "mongo3"
+    depends_on:
+      - "mongo"
     volumes:
       - .:/app 
       - /app/shopping/node_modules 
@@ -115,7 +77,7 @@ services:
       - "8007:8007" 
     restart: always
     depends_on:
-      # - "mongo1" 
+      - "mongo" 
       - "redis"
       - "rabbitmq"
     volumes:
@@ -139,6 +101,5 @@ services:
       - customer
     ports:
       - 80:80
-networks:
-  mongo-replica:
-   driver: bridge
+# networks:
+#   my-network:

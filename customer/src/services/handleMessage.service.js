@@ -1,12 +1,11 @@
 "use strict";
-const CustomerRepository = require("../database/repository/customer-repository");
+const CustomerRepository = require("../repository/customer-repository");
 const { PublishMessage } = require("../utils/index");
 const { PRODUCT_SERIVCE } = require("../config");
 const { BadRequestError } = require("../core/error.response");
 class findUserById {
   async handleEvent(data, channel) {
     const userId = data;
-    console.log(userId);
     const customer = await CustomerRepository.FindCustomerById({ _id: userId });
     const datas = {
       event: "Get_User",
