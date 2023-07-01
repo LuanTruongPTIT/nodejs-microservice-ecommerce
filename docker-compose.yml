@@ -41,6 +41,47 @@ services:
       - MONGO_INITDB_REPLICASET=rs0
     networks:
       - mongo-replica
+  mongo4:
+    container_name: mongo4
+    image: mongo
+    ports:
+      - 27024:27017 
+    restart: always
+    command: mongod --replSet "rs1"
+    volumes:
+      - ./mongodb/mongo4/:/app/data/db
+    environment:
+      - MONGO_INITDB_REPLICASET=rs1
+    networks:
+      - mongo-replica1
+  mongo5:
+    container_name: mongo5
+    image: mongo
+    
+    ports:
+      - 27025:27017
+    restart: always
+    command: mongod --replSet "rs1"
+    volumes:
+      - ./mongodb/mongo5/:/app/data/db
+    environment:
+      - MONGO_INITDB_REPLICASET=rs1
+    networks:
+      - mongo-replica1
+  mongo6:
+    container_name: mongo6
+    image: mongo
+   
+    ports:
+      - 27026:27017
+    restart: always
+    command: mongod --replSet "rs1"
+    volumes:
+      - ./mongodb/mongo6/:/app/data/db
+    environment:
+      - MONGO_INITDB_REPLICASET=rs1
+    networks:
+      - mongo-replica1
 # finally, we can define the initialization server
 # this runs the `rs.initiate` command to intialize
 # the replica set and connect the three servers to each other
@@ -141,4 +182,6 @@ services:
       - 80:80
 networks:
   mongo-replica:
+   driver: bridge
+  mongo-replica1:
    driver: bridge
