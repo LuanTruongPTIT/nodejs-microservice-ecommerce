@@ -155,9 +155,7 @@ class AccessService {
   };
   async SubscribeEvents(payload, channel) {
     const data = JSON.parse(payload);
-
     const { event, product_shop } = data;
-
     eventManager.triggerEvent(event, product_shop, channel);
   }
 }

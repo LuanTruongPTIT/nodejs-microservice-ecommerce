@@ -10,18 +10,36 @@ const redis_product = require("../database/connection.redis");
 const event = require("../constants/event");
 const { BadRequestError } = require("../core/error.response");
 const { Types } = require("mongoose");
-
+const { KeyProductOfRedis } = require("../constants/keyOfProduct.redis");
+const events = require("events");
 // Check JSON Object
-const checkObjectJson = async () => {};
-const getDraft = async ({ query, limit, skip }, product_shop) => {
-  const key = `product:${product_shop}`;
-  const responseProduct = await redis_product.client.json.get(key, {
-    path: ".draft:true",
-  });
+const eventEmitter = new events.EventEmitter();
 
+const addProductRedis = async (key, object, products, keyProperty) => {
+  console.log("Gia tri la", keyProperty);
+
+  if (object) {
+    object[keyProperty] = products;
+    await redis_product.client.json.set(key, "$", object);
+    return products;
+  } else {
+    let newObj = {};
+    newObj[keyProperty] = products;
+    await redis_product.client.json.set(key, "$", newObj);
+    return products;
+  }
+};
+const getDraft = async ({ query, limit, skip }, product_shop) => {
+  const key = `key:product:${product_shop}`;
+  // const responseProduct = await redis_product.client.json.get(key, {
+  //   path: ".draft:true",
+  // });
+  const responseObject = await redis_product.client.json.get(key);
+  const responseProduct =
+    responseObject && responseObject[KeyProductOfRedis.IsDraft_Product];
   let products;
   if (responseProduct) {
-    return responseProduct````;
+    return responseProduct;
   } else {
     products = await product
       .find(query)
@@ -29,22 +47,22 @@ const getDraft = async ({ query, limit, skip }, product_shop) => {
       .skip({ update: -1 })
       .limit(limit)
       .lean();
-
+    if (!products) {
+      throw new BadRequestError("Not found Product Draft");
+    }
     // save product in redis
-    await redis_product.client.json.set(key, "$", {
-      "draft:true": products,
-    });
-    return products;
+    const draft = KeyProductOfRedis.IsDraft_Product;
+    const result = await addProductRedis(key, responseObject, products, draft);
+    return result;
   }
 };
 const getPublish = async ({ query, limit, skip }) => {
-  const { product_shop, isPublished } = query;
-  console.log(`publish:${isPublished}`);
-  const key = `product:${product_shop}`;
-  console.log(key);
+  const { product_shop } = query;
+
+  const key = `key:product:${product_shop}`;
   const responseObject = await redis_product.client.json.get(key);
   const responseProduct =
-    responseObject && responseObject[`publish:${isPublished}`];
+    responseObject && responseObject[KeyProductOfRedis.IsPublish_Product];
   // const responseProduct = await redis_product.client.json.get(key, {
   //   path: ".publish:true",
   // });
@@ -59,44 +77,37 @@ const getPublish = async ({ query, limit, skip }) => {
       .limit(limit)
       .lean();
     console.log(products);
-    // save product in redis
-    // await redis_product.client.json.set(key, "$", {
-    //   "publish:true": products,
-    // });allalal
-    if (responseObject) {
-      responseObject["publish:true"] = products;
-      await redis_product.client.json.set(key, "$", responseObject);
-      return products;
-    } else {
-      await redis_product.client.json.set(key, "$", {
-        "publish:true": products,
-      });
-      return products;
+    if (!products) {
+      throw new BadRequestError("Not found Product Publish");
     }
+
+    const publish = KeyProductOfRedis.IsPublish_Product;
+    console.log(publish);
+    const result = addProductRedis(key, responseObject, products, publish);
+    return result;
   }
 };
 const consumerCustomer = async (channel) => {
   const q = await SubscribeMessage(channel);
-  let message;
-  return new Promise((resolve, reject) => {
-    channel.consume(
-      q.queue,
-      (msg) => {
-        if (msg.content.toString().event === event.getUserID) {
-          message = JSON.parse(msg.content).customer;
-          resolve({
-            name: message.name,
-            email: message.email,
-          });
-        }
-      },
-      {
-        noAck: true,
+
+  await channel.consume(
+    q.queue,
+    async (msg) => {
+      console.log("message is", msg.content.toString());
+      const content = JSON.parse(msg.content.toString());
+      console.log(content.event === event.getUserID);
+      if (content.event === event.getUserID) {
+        console.log(content.customer.name, content.customer.email);
+        eventEmitter.emit("message", {
+          name: content.customer.name,
+          email: content.customer.email,
+        });
       }
-    );
-  }).catch((error) => {
-    throw new BadRequestError("Not information user");
-  });
+    },
+    {
+      noAck: true,
+    }
+  );
 };
 // function all draft of shop
 module.exports.findAllDraftsForShop = async (
@@ -105,15 +116,19 @@ module.exports.findAllDraftsForShop = async (
   product_shop
 ) => {
   let products = await getDraft({ query, limit, skip }, product_shop);
-  const customer = await consumerCustomer(channel);
-  const { name, email } = customer;
-  products.map((product) => {
-    product.product_shop = {
-      name,
-      email,
-    };
-    return product;
+  eventEmitter.on("message", (data) => {
+    const { name, email } = data;
+    products.map((product) => {
+      product.product_shop = {
+        name,
+        email,
+      };
+      return product;
+    });
   });
+
+  await consumerCustomer(channel);
+  console.log("product", products);
   return products;
 };
 
@@ -137,15 +152,18 @@ module.exports.findAllPublishForShop = async (
   channel
 ) => {
   let products = await getPublish({ query, limit, skip });
-  console.log(products);
-  const customer = await consumerCustomer(channel);
-  const { name, email } = customer;
-  products.map((product) => {
-    product.product_shop = {
-      name,
-      email,
-    };
-    return product;
+  eventEmitter.on("message", (data) => {
+    const { name, email } = data;
+    products.map((product) => {
+      product.product_shop = {
+        name,
+        email,
+      };
+      return product;
+    });
   });
+
+  await consumerCustomer(channel);
   return products;
 };
+const searchProductByUser = async ({ keySearch }) => {};

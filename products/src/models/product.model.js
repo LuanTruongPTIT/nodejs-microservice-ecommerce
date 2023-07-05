@@ -3,6 +3,7 @@ const { model, Schema, Types } = require("mongoose");
 // const slugify = require("slugify");
 const DOCUMENT_NAME = "Product";
 const COLLECTION_NAME = "Products";
+const redis_product = require("../database/connection.redis");
 
 const productSchema = new Schema(
   {
@@ -78,6 +79,7 @@ const funitureSchema = new Schema(
     timestamps: true,
   }
 );
+
 module.exports = {
   product: model(DOCUMENT_NAME, productSchema),
   clothing: model("Clothing", clothingSchema),

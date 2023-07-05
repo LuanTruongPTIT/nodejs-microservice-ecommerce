@@ -103,3 +103,23 @@ services:
       - 80:80
 # networks:
 #   my-network:
+
+
+
+
+{
+  "draft:true":[{
+        "name":"product_1",
+        "quantity":50
+  },{
+      "name":"product_2",
+        "quantity":20
+  }],
+    "draft:false":[{
+        "name":"product_3",
+        "quantity":50
+  },{
+      "name":"product_4",
+        "quantity":20
+  }],
+}

@@ -54,6 +54,8 @@ class ProductFactory {
       product_shop
     );
   }
+
+  static async searchProducts({ keySearch }) {}
   async SubscribeEvents(payload, channel) {
     const { event, data } = payload;
 

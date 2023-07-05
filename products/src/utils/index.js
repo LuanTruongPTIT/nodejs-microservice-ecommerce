@@ -36,7 +36,7 @@ module.exports.createChannel = async () => {
 };
 module.exports.PublishMessage = async (channel, service, msg) => {
   await channel.publish(EXCHANGE_NAME, service, Buffer.from(msg));
-};
+};  
 let taskInitialized = false;
 let q = null;
 module.exports.SubscribeMessage = async (channel) => {

@@ -89,7 +89,7 @@ services:
   redis:
     container_name: redis_1
     # image: redis
-    image: redislabs/rejson:latest
+    image: redislabs/redismod:latest
     ports:
      - "6379:6379"
     # networks:
