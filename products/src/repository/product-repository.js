@@ -6,26 +6,25 @@ const {
   funiture,
 } = require("../models/product.model");
 const { SubscribeMessage } = require("../utils/index");
-const redis_product = require("../database/connection.redis");
+// const redis_product = require("../database/connection.redis");
+const client = require("../database/connection.redis");
 const event = require("../constants/event");
 const { BadRequestError } = require("../core/error.response");
 const { Types } = require("mongoose");
-const { KeyProductOfRedis } = require("../constants/keyOfProduct.redis");
+const { KeyProductOfRedis } = require("../constants/key.product.redis");
 const events = require("events");
 // Check JSON Object
 const eventEmitter = new events.EventEmitter();
 
 const addProductRedis = async (key, object, products, keyProperty) => {
-  console.log("Gia tri la", keyProperty);
-
   if (object) {
     object[keyProperty] = products;
-    await redis_product.client.json.set(key, "$", object);
+    await client.json.set(key, "$", object);
     return products;
   } else {
     let newObj = {};
     newObj[keyProperty] = products;
-    await redis_product.client.json.set(key, "$", newObj);
+    await client.json.set(key, "$", newObj);
     return products;
   }
 };
@@ -34,11 +33,12 @@ const getDraft = async ({ query, limit, skip }, product_shop) => {
   // const responseProduct = await redis_product.client.json.get(key, {
   //   path: ".draft:true",
   // });
-  const responseObject = await redis_product.client.json.get(key);
+  const responseObject = await client.json.get(key);
   const responseProduct =
     responseObject && responseObject[KeyProductOfRedis.IsDraft_Product];
   let products;
   if (responseProduct) {
+    console.log("responseProduct", responseProduct);
     return responseProduct;
   } else {
     products = await product
@@ -60,7 +60,7 @@ const getPublish = async ({ query, limit, skip }) => {
   const { product_shop } = query;
 
   const key = `key:product:${product_shop}`;
-  const responseObject = await redis_product.client.json.get(key);
+  const responseObject = await client.json.get(key);
   const responseProduct =
     responseObject && responseObject[KeyProductOfRedis.IsPublish_Product];
   // const responseProduct = await redis_product.client.json.get(key, {
@@ -76,13 +76,13 @@ const getPublish = async ({ query, limit, skip }) => {
       .skip({ update: -1 })
       .limit(limit)
       .lean();
-    console.log(products);
+
     if (!products) {
       throw new BadRequestError("Not found Product Publish");
     }
 
     const publish = KeyProductOfRedis.IsPublish_Product;
-    console.log(publish);
+
     const result = addProductRedis(key, responseObject, products, publish);
     return result;
   }
@@ -93,11 +93,8 @@ const consumerCustomer = async (channel) => {
   await channel.consume(
     q.queue,
     async (msg) => {
-      console.log("message is", msg.content.toString());
       const content = JSON.parse(msg.content.toString());
-      console.log(content.event === event.getUserID);
       if (content.event === event.getUserID) {
-        console.log(content.customer.name, content.customer.email);
         eventEmitter.emit("message", {
           name: content.customer.name,
           email: content.customer.email,
@@ -128,7 +125,7 @@ module.exports.findAllDraftsForShop = async (
   });
 
   await consumerCustomer(channel);
-  console.log("product", products);
+
   return products;
 };
 
@@ -139,7 +136,7 @@ module.exports.publishProductByShop = async (product_id, product_shop) => {
     product_shop: new Types.ObjectId(product_shop_id.product_shop),
     _id: new Types.ObjectId(product_id),
   });
-  console.log(foundShop);
+
   if (!foundShop)
     throw new BadRequestError("Not found shop when publish product shop");
   foundShop.isDraft = false;
@@ -166,4 +163,6 @@ module.exports.findAllPublishForShop = async (
   await consumerCustomer(channel);
   return products;
 };
-const searchProductByUser = async ({ keySearch }) => {};
+const searchProductByUser = async ({ keySearch }) => {
+  const regexSearch = new RegExp(keySearch);
+};

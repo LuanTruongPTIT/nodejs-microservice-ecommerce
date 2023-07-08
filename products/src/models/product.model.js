@@ -3,7 +3,6 @@ const { model, Schema, Types } = require("mongoose");
 // const slugify = require("slugify");
 const DOCUMENT_NAME = "Product";
 const COLLECTION_NAME = "Products";
-const redis_product = require("../database/connection.redis");
 
 const productSchema = new Schema(
   {
@@ -35,6 +34,7 @@ const productSchema = new Schema(
     timestamps: true,
   }
 );
+
 //Document middleware:runs befpre .save() and .create()...
 // productSchema.pre("save", function (next) {
 //   this.product_slug = slugify(this.product_name, { lower: true });
@@ -79,7 +79,8 @@ const funitureSchema = new Schema(
     timestamps: true,
   }
 );
-
+// create index for search
+productSchema.index({ product_name: "text", product_description: "text" });
 module.exports = {
   product: model(DOCUMENT_NAME, productSchema),
   clothing: model("Clothing", clothingSchema),

@@ -1,137 +1,70 @@
-const redis = require("redis");
+const { createClient, SchemaFieldTypes } = require("redis");
 const { REDIS_HOST, REDIS_PORT } = require("../config");
-const { SchemaFieldTypes } = require("redis");
-class RedisWrapper {
-  constructor() {
-    // this.client = new redis(REDIS_PORT, REDIS_HOST);
-    this.client = redis.createClient({
-      url: `redis://${REDIS_HOST}:${REDIS_PORT}`,
-    });
-  }
-  initalizeClient() {
-    this.onConnect();
-    this.onReconnecting();
-    this.onEnd();
-    this.onClose();
-    this.onError();
-    this.createIndexProductDraft();
-    this.createIndexProductPublish();
-  }
-  async onConnect() {
-    await this.client.connect("connect", () => {
-      console.log("Redis-Connect to Redis");
-    });
-  }
-  onReconnecting() {
-    this.client.on("reconnecting", () => {
-      console.log("Redis-Reconnecting to Redis");
-    });
-  }
-  onEnd() {
-    this.client.on("end", () => {
-      console.log("Redis-End to Redis");
-    });
-  }
-  onClose() {
-    this.client.on("close", () => {
-      console.log("Redis-End to Redis");
-    });
-  }
-  onError() {
-    this.client.on("error", () => {
-      console.log("Redis-Redis error");
-    });
-  }
+const { promisify } = require("util");
+const { index_Product } = require("../constants/index.key.redis");
+const { KeyProductOfRedis } = require("../constants/key.product.redis");
+const client = createClient({
+  url: `redis://${REDIS_HOST}:${REDIS_PORT}`,
+});
+client.on("error", (err) => console.log("Redis disconnect"));
 
-  async createIndexProductDraft() {
-    try {
-      await this.client.ft.create("idx:product:draft", {
-        "$.draft[*].product_name": {
-          type: SchemaFieldTypes.TEXT,
-          SORTABLE: true,
-        },
-        "$.draft[*].product_description": {
-          type: SchemaFieldTypes.TEXT,
-          AS: "product_des",
-        },
-        "$.draft[*].product_type": {
-          type: SchemaFieldTypes.TAG,
-          AS: "product_type",
-        },
-        "$.draft[*].product_shop": {
-          type: SchemaFieldTypes.TEXT,
-          AS: "product_shop",
-        },
-        "$.draft[*].product_attributes.brand": {
-          type: SchemaFieldTypes.TEXT,
-          SORTABLE: true,
-        },
-        "$.draft[*].product_attributes.material": {
-          type: SchemaFieldTypes.TEXT,
-          SORTABLE: true,
-        },
-      });
-    } catch (error) {
-      if (error.message === "Index already exists") {
-        console.log(error);
-        console.log("Index exists already, skipped creation");
-      } else {
-        throw error;
-      }
-    }
+const checkIndexExists = async (indexName) => {
+  try {
+    await client.ft.info(indexName);
+    return true;
+  } catch (error) {
+    return false;
   }
-  async createIndexProductPublish() {
-    try {
-      await this.client.ft.create(
-        "idx:product:publish",
-        {
-          "$.publish[*].product_name": {
-            type: SchemaFieldTypes.TEXT,
-            SORTABLE: true,
-          },
-          "$.publish[*].product_description": {
-            type: SchemaFieldTypes.TEXT,
-            AS: "product_des",
-          },
-          "$.publish[*].product_type": {
-            type: SchemaFieldTypes.TAG,
-            AS: "product_type",
-          },
-          "$.publish[*].product_shop": {
-            type: SchemaFieldTypes.TEXT,
-            AS: "product_shop",
-          },
-          "$.publish[*].product_attributes.brand": {
-            type: SchemaFieldTypes.TEXT,
-            SORTABLE: true,
-          },
-          "$.publish[*].product_attributes.material": {
-            type: SchemaFieldTypes.TEXT,
-            SORTABLE: true,
-          },
-        },
-        {
-          ON: "JSON",
-          PREFIX: "key:product",
-        }
-      );
-    } catch (error) {
-      if (error.message === "Index already exists") {
-        console.log(error);
-        console.log("Index exists already, skipped creation");
-      } else {
-        throw error;
-      }
-    }
+};
+const createIndex = async (indexName, fields, options) => {
+  const indexExists = await checkIndexExists(indexName);
+  if (!indexExists) {
+    await client.ft.create(indexName, fields, options);
   }
-  static getInstance() {
-    if (!RedisWrapper.instance) {
-      RedisWrapper.instance = new RedisWrapper(); // Database.instance de lay doi tuong ra
-    }
-    return RedisWrapper.instance;
+};
+const updateIndex = async (indexName, fields, path, options) => {
+  const indexExists = await checkIndexExists(indexName);
+  if (indexExists) {
+    const index_E = await client.ft.info(indexName);
+    if (index_E.attributes[0].identifier !== path)
+      await client.ft.alter(indexName, fields, options);
   }
-}
-// const redis_products = new RedisWrapper();
-const redis_products = RedisWrapper.getInstance();
+};
+// create index product
+const createIndexProductDraft = async () => {
+  const indexName = index_Product.product_draft.name_index;
+  const path = index_Product.product_draft.path.path_product_name;
+  console.log(indexName, path, "create");
+  let fields = {};
+  fields[path] = {
+    type: SchemaFieldTypes.TEXT,
+    SORTABLE: true,
+  };
+  const options = {
+    ON: "JSON",
+    PREFIX: KeyProductOfRedis.IsDraft_Product,
+  };
+  await createIndex(indexName, fields, options);
+};
+// update index product brand
+const updateIndexProductDraftBrand = async () => {
+  const indexName = index_Product.product_draft.name_index;
+  const path = index_Product.product_draft.path.path_product_brand;
 
-module.exports = redis_products;
+  let fields = {};
+  fields[path] = {
+    type: SchemaFieldTypes.TEXT,
+    SORTABLE: true,
+  };
+  const options = {
+    ON: "JSON",
+    PREFIX: KeyProductOfRedis.IsDraft_Product,
+  };
+  await updateIndex(indexName, fields, path, options);
+};
+module.exports = {
+  client,
+  checkIndexExists,
+  createIndexProductDraft,
+  updateIndexProductDraftBrand,
+};
