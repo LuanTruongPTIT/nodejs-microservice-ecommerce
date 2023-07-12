@@ -12,6 +12,7 @@ const {
   findAllDraftsForShop,
   publishProductByShop,
   findAllPublishForShop,
+  searchProductByShop,
 } = require("../repository/product-repository");
 // define Factory class to create product
 
@@ -55,7 +56,9 @@ class ProductFactory {
     );
   }
 
-  static async searchProducts({ keySearch }) {}
+  static async searchProducts(product_shop, { keySearch }) {
+    return await searchProductByShop(product_shop, { keySearch });
+  }
   async SubscribeEvents(payload, channel) {
     const { event, data } = payload;
 

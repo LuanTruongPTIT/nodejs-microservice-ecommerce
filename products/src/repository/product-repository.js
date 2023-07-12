@@ -7,7 +7,7 @@ const {
 } = require("../models/product.model");
 const { SubscribeMessage } = require("../utils/index");
 // const redis_product = require("../database/connection.redis");
-const client = require("../database/connection.redis");
+const { client } = require("../database/connection.redis");
 const event = require("../constants/event");
 const { BadRequestError } = require("../core/error.response");
 const { Types } = require("mongoose");
@@ -30,9 +30,12 @@ const addProductRedis = async (key, object, products, keyProperty) => {
 };
 const getDraft = async ({ query, limit, skip }, product_shop) => {
   const key = `key:product:${product_shop}`;
+  console.log(client);
+  console.log(key);
   // const responseProduct = await redis_product.client.json.get(key, {
   //   path: ".draft:true",
   // });
+
   const responseObject = await client.json.get(key);
   const responseProduct =
     responseObject && responseObject[KeyProductOfRedis.IsDraft_Product];
@@ -80,9 +83,7 @@ const getPublish = async ({ query, limit, skip }) => {
     if (!products) {
       throw new BadRequestError("Not found Product Publish");
     }
-
     const publish = KeyProductOfRedis.IsPublish_Product;
-
     const result = addProductRedis(key, responseObject, products, publish);
     return result;
   }
@@ -163,6 +164,27 @@ module.exports.findAllPublishForShop = async (
   await consumerCustomer(channel);
   return products;
 };
-const searchProductByUser = async ({ keySearch }) => {
+module.exports.searchProductByShop = async (product_shop, { keySearch }) => {
+  // const key = `key:product:${product_shop}`;
   const regexSearch = new RegExp(keySearch);
+  console.log("regexSearch", regexSearch);
+  const result = await client.ft.search(
+    "idx:product:draft",
+    "@product_name:Jeans"
+  );
+  // console.log("Result is ", result.documents);
+  if (result) {
+    const products = result.documents;
+    let obj = {};
+    products.map((product) => {
+      obj["draft"] = product.value.draft;
+      return obj;
+    });
+    return obj;
+  } else {
+  }
+
+  // console.log(result.documents[0].value.draft);
+
+  // console.log(product_shop);
 };

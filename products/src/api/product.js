@@ -22,26 +22,22 @@ module.exports = (app, channel) => {
   );
 
   // findAllDraft
-  app.get(
-    "/drafts/all/",
-    authenticationV2,
-    asyncHandler(async (req, res, next) => {
-      const data = {
-        event: "FIND_USER",
-        product_shop: req.user.userId,
-      };
-      await PublishMessage(channel, CUSTOMER_SERVICE, JSON.stringify(data));
-      new SuccessResponse({
-        message: "Get all drafts success",
-        metadata: await ProductService.findAllDraftsForShop(
-          {
-            product_shop: req.user.userId,
-          },
-          channel
-        ),
-      }).send(res);
-    })
-  );
+  app.get("/drafts/all/", authenticationV2, async (req, res, next) => {
+    const data = {
+      event: "FIND_USER",
+      product_shop: req.user.userId,
+    };
+    await PublishMessage(channel, CUSTOMER_SERVICE, JSON.stringify(data));
+    new SuccessResponse({
+      message: "Get all drafts success",
+      metadata: await ProductService.findAllDraftsForShop(
+        {
+          product_shop: req.user.userId,
+        },
+        channel
+      ),
+    }).send(res);
+  });
 
   //Publish product
   app.post(
@@ -79,5 +75,17 @@ module.exports = (app, channel) => {
       }).send(res);
     })
   );
-  // app.get("/publish/");
+  app.get(
+    "/product/search/draft/:keySearch",
+    authenticationV2,
+    asyncHandler(async (req, res, next) => {
+      new SuccessResponse({
+        message: "Get list getAllDraftForShop success",
+        metadata: await ProductService.searchProducts(
+          { product_shop: req.user.userId },
+          req.params
+        ),
+      }).send(res);
+    })
+  );
 };

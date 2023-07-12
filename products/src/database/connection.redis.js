@@ -2,7 +2,10 @@ const { createClient, SchemaFieldTypes } = require("redis");
 const { REDIS_HOST, REDIS_PORT } = require("../config");
 const { promisify } = require("util");
 const { index_Product } = require("../constants/index.key.redis");
-const { KeyProductOfRedis } = require("../constants/key.product.redis");
+const {
+  KeyProductOfRedis,
+  keyRedisProduct,
+} = require("../constants/key.product.redis");
 const client = createClient({
   url: `redis://${REDIS_HOST}:${REDIS_PORT}`,
 });
@@ -24,7 +27,7 @@ const createIndex = async (indexName, fields, options) => {
 };
 const updateIndex = async (indexName, fields, path, options) => {
   const indexExists = await checkIndexExists(indexName);
-  if (indexExists) {
+  if (!indexExists) {
     const index_E = await client.ft.info(indexName);
     if (index_E.attributes[0].identifier !== path)
       await client.ft.alter(indexName, fields, options);
@@ -34,15 +37,15 @@ const updateIndex = async (indexName, fields, path, options) => {
 const createIndexProductDraft = async () => {
   const indexName = index_Product.product_draft.name_index;
   const path = index_Product.product_draft.path.path_product_name;
-  console.log(indexName, path, "create");
   let fields = {};
   fields[path] = {
     type: SchemaFieldTypes.TEXT,
     SORTABLE: true,
+    AS: 'product_name',
   };
   const options = {
     ON: "JSON",
-    PREFIX: KeyProductOfRedis.IsDraft_Product,
+    PREFIX: keyRedisProduct.keyUser,
   };
   await createIndex(indexName, fields, options);
 };
@@ -55,10 +58,11 @@ const updateIndexProductDraftBrand = async () => {
   fields[path] = {
     type: SchemaFieldTypes.TEXT,
     SORTABLE: true,
+    AS: 'product_brand',
   };
   const options = {
     ON: "JSON",
-    PREFIX: KeyProductOfRedis.IsDraft_Product,
+    PREFIX: keyRedisProduct.keyUser,
   };
   await updateIndex(indexName, fields, path, options);
 };

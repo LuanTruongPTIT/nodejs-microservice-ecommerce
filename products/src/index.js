@@ -6,10 +6,11 @@ const {
   createIndexProductDraft,
   updateIndexProductDraftBrand,
 } = require("./database/connection.redis");
-const { changeDB } = require("./changeDB/changeStream");
+const changeDB = require("./services/changeStream");
 const { PORT } = require("./config");
 const instanceMongoDB = require("./database/connection");
 const { countConnect, checkOverload } = require("./helpers/check.connect");
+
 // const { checkIndexExists } = require("./models/product.createindex");
 const StartServer = async () => {
   const app = express();
@@ -22,7 +23,9 @@ const StartServer = async () => {
   await client.connect();
   createIndexProductDraft();
   updateIndexProductDraftBrand();
-  changeDB();
+  // Listen change in DB
+  require("./services/subscribeMessage.service");
+  changeDB.publishChangeData();
   app.use("/", (req, res, next) => {
     return res.status(200).json({ msg: "Hello from Product" });
   });
