@@ -41,7 +41,7 @@ const createIndexProductDraft = async () => {
   fields[path] = {
     type: SchemaFieldTypes.TEXT,
     SORTABLE: true,
-    AS: 'product_name',
+    AS: "product_name",
   };
   const options = {
     ON: "JSON",
@@ -58,7 +58,7 @@ const updateIndexProductDraftBrand = async () => {
   fields[path] = {
     type: SchemaFieldTypes.TEXT,
     SORTABLE: true,
-    AS: 'product_brand',
+    AS: "product_brand",
   };
   const options = {
     ON: "JSON",
@@ -66,6 +66,7 @@ const updateIndexProductDraftBrand = async () => {
   };
   await updateIndex(indexName, fields, path, options);
 };
+const updateIndexProductId = async () => {};
 module.exports = {
   client,
   checkIndexExists,

@@ -6,6 +6,7 @@ const index_Product = {
     path: {
       path_product_name: "$.draft[*].product_name",
       path_product_brand: "$.draft[*].product_brand",
+      path_product_id: "$.draft[*]._id",
     },
   },
 };

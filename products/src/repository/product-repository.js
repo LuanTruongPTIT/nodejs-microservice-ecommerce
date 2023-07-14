@@ -182,6 +182,8 @@ module.exports.searchProductByShop = async (product_shop, { keySearch }) => {
     });
     return obj;
   } else {
+     
+
   }
 
   // console.log(result.documents[0].value.draft);
